@@ -211,3 +211,20 @@ class TestProductModel(unittest.TestCase):
                 count += 1
         prodsList = Product.find_by_availability(True)
         self.assertEqual(prodsList.count(), count)
+
+    def test_find_a_product_by_category(self):
+        """It should find a product by category from database"""
+        for _ in range(10):
+            product = ProductFactory()
+            product.id = None
+            product.create()
+        # Assert that 10 products in db
+        products = Product.all()
+        self.assertEqual(len(products), 10)
+        searchedCat = products[0].category
+        count = 0
+        for item in products:
+            if item.category == searchedCat:
+                count += 1
+        prodsList = Product.find_by_category(searchedCat)
+        self.assertEqual(prodsList.count(), count)
