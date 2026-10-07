@@ -32,6 +32,7 @@ from service import app
 from service.common import status
 from service.models import db, init_db, Product
 from tests.factories import ProductFactory
+from urllib.parse import quote_plus
 
 # Disable all but critical errors during normal test run
 # uncomment for debugging failing tests
@@ -301,7 +302,9 @@ class TestProductRoutes(TestCase):
         self.assertEqual(len(products), 5)
         selectedName = products[0].name
         count = sum(1 for item in products if item.name == selectedName)
-        response = self.client.get(f"{BASE_URL}/{selectedName}")
+        response = self.client.get(
+            BASE_URL, query_string=f"name={quote_plus(selectedName)}"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         products = response.get_json()
         self.assertEqual(len(products), count)     
@@ -310,6 +313,57 @@ class TestProductRoutes(TestCase):
         response = self.client.get(f"{BASE_URL}/JIJIUUJJKJJJJK")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    # ----------------------------------------------------------
+    # TEST LIST BY Category API
+    # ----------------------------------------------------------
+
+    def test_list_by_category_products(self):
+        """It should list all products by category from database"""        
+        for _ in range(5):
+            product = ProductFactory()
+            product.id = None
+            product.create()
+        # Assert that it was assigned an id and shows up in the database
+        products = Product.all()
+        self.assertEqual(len(products), 5)
+        selectedCategory= products[0].category.name
+        count = sum(1 for item in products if item.category.name == selectedCategory)
+        response = self.client.get(
+            BASE_URL, query_string=f"category={quote_plus(selectedCategory)}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        products = response.get_json()
+        self.assertEqual(len(products), count)     
+
+        # check 404 for nothing
+        response = self.client.get(f"{BASE_URL}/JIJIUUJJKJJJJK")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+     # ----------------------------------------------------------
+    # TEST LIST BY Availabilty API
+    # ----------------------------------------------------------
+
+    def test_list_by_availabilty_products(self):
+        """It should list all products by availabilty from database"""        
+        for _ in range(5):
+            product = ProductFactory()
+            product.id = None
+            product.create()
+        # Assert that it was assigned an id and shows up in the database
+        products = Product.all()
+        self.assertEqual(len(products), 5)
+        selected = products[0].available
+        count = sum(1 for item in products if item.available == selected)
+        response = self.client.get(
+            BASE_URL, query_string=f"available={quote_plus(str(selected))}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        products = response.get_json()
+        self.assertEqual(len(products), count)     
+
+        # check 404 for nothing
+        response = self.client.get(f"{BASE_URL}/JIJIUUJJKJJJJK")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     ######################################################################
     # Utility functions
