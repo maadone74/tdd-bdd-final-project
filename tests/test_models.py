@@ -195,3 +195,19 @@ class TestProductModel(unittest.TestCase):
                 count += 1
         prodsList = Product.find_by_name(searchedName)
         self.assertEqual(prodsList.count(), count)
+
+    def test_find_a_product_by_availability(self):
+        """It should find a product by availability from database"""
+        for _ in range(10):
+            product = ProductFactory()
+            product.id = None
+            product.create()
+        # Assert that 10 products in db
+        products = Product.all()
+        self.assertEqual(len(products), 10)
+        count = 0
+        for item in products:
+            if item.available == True:
+                count += 1
+        prodsList = Product.find_by_availability(True)
+        self.assertEqual(prodsList.count(), count)
