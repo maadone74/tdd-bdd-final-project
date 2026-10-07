@@ -24,11 +24,12 @@ For information on Waiting until elements are present in the HTML see:
 """
 import requests
 from behave import given
+from service.common import status  # HTTP Status Codes
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select, WebDriverWait
+from selenium.webdriver.support import expected_conditions
 
-# HTTP Return Codes
-HTTP_200_OK = 200
-HTTP_201_CREATED = 201
-HTTP_204_NO_CONTENT = 204
+
 
 @given('the following products')
 def step_impl(context):
@@ -38,10 +39,11 @@ def step_impl(context):
     #
     rest_endpoint = f"{context.base_url}/products"
     context.resp = requests.get(rest_endpoint)
-    assert(context.resp.status_code == HTTP_200_OK)
-    for product in context.resp.json():
-        context.resp = requests.delete(f"{rest_endpoint}/{product['id']}")
-        assert(context.resp.status_code == HTTP_204_NO_CONTENT)
+    assert(context.resp.status_code == status.HTTP_200_OK or context.resp.status_code == status.HTTP_404_NOT_FOUND)
+    if (context.resp.status_code == 200):
+        for product in context.resp.json():
+            context.resp = requests.delete(f"{rest_endpoint}/{product['id']}")
+            assert(context.resp.status_code == status.HTTP_204_NO_CONTENT)
 
     #
     # load the database with new products
@@ -54,26 +56,39 @@ def step_impl(context):
             "available": row['available'] in ['True', 'true', '1'],
             "category": row['category']
         }
-        logging.debug("Loading Product: %s", payload)
         context.resp = requests.post(rest_endpoint, json=payload)
-        assert(context.resp.status_code == HTTP_201_CREATED)
+        assert(context.resp.status_code == status.HTTP_201_CREATED)
 
 
-@when(u'I press the "Create" button')
-def step_impl(context):
-    raise NotImplementedError(u'STEP: When I press the "Create" button')
+@when(u'I press the "{button}" button')
+def step_impl(context,button):
+    button_id = button.lower() + '-btn'
+    context.driver.find_element_by_id(button_id).click()
 
 
-@then(u'I should see the message "Success"')
-def step_impl(context):
-    raise NotImplementedError(u'STEP: Then I should see the message "Success"')
+@then(u'I should see the message "{msg}"')
+def step_impl(context,msg):
+    found = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, 'flash_message'),
+            msg
+        )
+    )
+    assert(found)
 
 
-@when(u'I press the "Clear" button')
-def step_impl(context):
-    raise NotImplementedError(u'STEP: When I press the "Clear" button')
+@then(u'I should see "{text}" in the results')
+def step_impl(context,text):
+    found1 = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, 'search_results'),
+            text
+        )
+    )
+    assert(found1)
 
 
-@when(u'I press the "Retrieve" button')
-def step_impl(context):
-    raise NotImplementedError(u'STEP: When I press the "Retrieve" button')
+@then(u'I should not see "{text}" in the results')
+def step_impl(context,text):
+    element = context.driver.find_element_by_id('search_results')
+    assert(text not in element.text)
