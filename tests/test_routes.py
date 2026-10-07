@@ -264,6 +264,53 @@ class TestProductRoutes(TestCase):
         response = self.client.delete(f"{BASE_URL}/{new_product['id']}")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    # ----------------------------------------------------------
+    # TEST LIST ALL API
+    # ----------------------------------------------------------
+
+    def test_list_all_products(self):
+        """It should list all products from database"""
+        # check 404 for nothing
+        response = self.client.get(f"{BASE_URL}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        for _ in range(5):
+            product = ProductFactory()
+            product.id = None
+            product.create()
+        # Assert that it was assigned an id and shows up in the database
+        products = Product.all()
+        self.assertEqual(len(products), 5)
+        response = self.client.get(f"{BASE_URL}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        products = response.get_json()
+        self.assertEqual(len(products), 5)     
+    
+    # ----------------------------------------------------------
+    # TEST LIST BY NAME API
+    # ----------------------------------------------------------
+
+    def test_list_by_name_products(self):
+        """It should list all products by name from database"""        
+        for _ in range(5):
+            product = ProductFactory()
+            product.id = None
+            product.create()
+        # Assert that it was assigned an id and shows up in the database
+        products = Product.all()
+        self.assertEqual(len(products), 5)
+        selectedName = products[0].name
+        count = sum(1 for item in products if item.name == selectedName)
+        response = self.client.get(f"{BASE_URL}/{selectedName}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        products = response.get_json()
+        self.assertEqual(len(products), count)     
+
+        # check 404 for nothing
+        response = self.client.get(f"{BASE_URL}/JIJIUUJJKJJJJK")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
     ######################################################################
     # Utility functions
     ######################################################################

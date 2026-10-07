@@ -98,9 +98,37 @@ def create_products():
 # L I S T   A L L   P R O D U C T S
 ######################################################################
 
-#
-# PLACE YOUR CODE TO LIST ALL PRODUCTS HERE
-#
+@app.route("/products", methods=["GET"])
+def get_all_products():
+    """
+    Gets All Products
+    This endpoint will return all products 
+    """
+    app.logger.info("Request to Get all Products...")
+    products = Product.all()
+    if not products:
+        abort(status.HTTP_404_NOT_FOUND, f"No Products found.")
+    app.logger.info(f"{len(products)} Products found")
+    results = [product.serialize() for product in products]
+    return results, status.HTTP_200_OK
+
+######################################################################
+# L I S T   A L L   P R O D U C T S   B Y    N A M E
+######################################################################
+
+@app.route("/products/<string:product_name>", methods=["GET"])
+def get_all_products_by_name(product_name):
+    """
+    Gets All Products by Name
+    This endpoint will return all products by name 
+    """
+    app.logger.info("Request to Get all Products by name...")
+    products = Product.find_by_name(product_name)
+    if len(products.all()) == 0:
+        abort(status.HTTP_404_NOT_FOUND, f"No Products found.")
+    app.logger.info(f"{len(products.all())} Products found")
+    results = [product.serialize() for product in products]
+    return results, status.HTTP_200_OK
 
 ######################################################################
 # R E A D   A   P R O D U C T

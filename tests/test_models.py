@@ -231,3 +231,5 @@ class TestProductModel(unittest.TestCase):
                 count += 1
         prodsList = Product.find_by_category(searchedCat)
         self.assertEqual(prodsList.count(), count)
+        
+    
