@@ -115,6 +115,7 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(len(products), 1)
         # Check that it matches the original product
         foundProduct = Product.find(product.id)
+         self.assertEqual(foundProduct.id, product.id)
         self.assertEqual(foundProduct.name, product.name)
         self.assertEqual(foundProduct.description, product.description)
         self.assertEqual(Decimal(foundProduct.price), product.price)
@@ -143,7 +144,7 @@ class TestProductModel(unittest.TestCase):
         updatedProduct = Product.find(product.id)
         self.assertEqual(updatedProduct.id, product.id)
         self.assertEqual(updatedProduct.name, product.name)
-        self.assertEqual('New description', product.description)
+        self.assertEqual('New description', updatedProduct.description)
         self.assertEqual(Decimal(updatedProduct.price), product.price)
         self.assertEqual(updatedProduct.available, product.available)
         self.assertEqual(updatedProduct.category, product.category)
@@ -174,6 +175,8 @@ class TestProductModel(unittest.TestCase):
 
     def test_list_all_products(self):
         """It should list all products from database"""
+        products = Product.all()
+        self.assertEqual(len(products), 0)
         for _ in range(5):
             product = ProductFactory()
             product.id = None
@@ -197,6 +200,8 @@ class TestProductModel(unittest.TestCase):
             if item.name == searchedName:
                 count += 1
         prodsList = Product.find_by_name(searchedName)
+        for item in prodsList:
+            assert(item.name == searchedName)
         self.assertEqual(prodsList.count(), count)
 
     def test_find_a_product_by_availability(self):
@@ -213,6 +218,8 @@ class TestProductModel(unittest.TestCase):
             if item.available:
                 count += 1
         prodsList = Product.find_by_availability(True)
+        for item in prodsList:
+            assert(item.available == True)
         self.assertEqual(prodsList.count(), count)
 
     def test_find_a_product_by_category(self):
@@ -230,6 +237,8 @@ class TestProductModel(unittest.TestCase):
             if item.category == searchedCat:
                 count += 1
         prodsList = Product.find_by_category(searchedCat)
+        for item in prodsList:
+            assert(item.category == searchedCat)
         self.assertEqual(prodsList.count(), count)
         
     

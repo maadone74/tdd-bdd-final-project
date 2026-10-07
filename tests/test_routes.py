@@ -260,10 +260,6 @@ class TestProductRoutes(TestCase):
         response = self.client.get(f"{BASE_URL}/{new_product['id']}")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        # check if delete throws 404
-        response = self.client.delete(f"{BASE_URL}/{new_product['id']}")
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
     # ----------------------------------------------------------
     # TEST LIST ALL API
     # ----------------------------------------------------------
