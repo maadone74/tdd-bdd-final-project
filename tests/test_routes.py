@@ -193,7 +193,7 @@ class TestProductRoutes(TestCase):
         response = self.client.get(f"{BASE_URL}/70000")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-     # ----------------------------------------------------------
+    # ----------------------------------------------------------
     # TEST UPDATE API
     # ----------------------------------------------------------
     def test_update_product(self):
@@ -231,6 +231,38 @@ class TestProductRoutes(TestCase):
         response = self.client.put(f"{BASE_URL}/70000",json=test_product.serialize())
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    # ----------------------------------------------------------
+    # TEST DELETE API
+    # ----------------------------------------------------------
+    def test_delete_product(self):
+        """It should Delete a Product from API"""
+        test_product = ProductFactory()
+        logging.debug("Test Product: %s", test_product.serialize())
+        response = self.client.post(BASE_URL, json=test_product.serialize())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Make sure location header is set
+        location = response.headers.get("Location", None)
+        self.assertIsNotNone(location)
+
+        # Check the data is correct
+        new_product = response.get_json()
+        self.assertEqual(new_product["name"], test_product.name)
+        self.assertEqual(new_product["description"], test_product.description)
+        self.assertEqual(Decimal(new_product["price"]), test_product.price)
+        self.assertEqual(new_product["available"], test_product.available)
+        self.assertEqual(new_product["category"], test_product.category.name)
+
+        response = self.client.delete(f"{BASE_URL}/{new_product['id']}")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        
+        # check if really gone
+        response = self.client.get(f"{BASE_URL}/{new_product['id']}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # check if delete throws 404
+        response = self.client.delete(f"{BASE_URL}/{new_product['id']}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     ######################################################################
     # Utility functions
