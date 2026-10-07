@@ -112,7 +112,7 @@ class TestProductRoutes(TestCase):
     # TEST CREATE
     # ----------------------------------------------------------
     def test_create_product(self):
-        """It should Create a new Product"""
+        """It should Create a new Product via API"""
         test_product = ProductFactory()
         logging.debug("Test Product: %s", test_product.serialize())
         response = self.client.post(BASE_URL, json=test_product.serialize())
@@ -163,7 +163,7 @@ class TestProductRoutes(TestCase):
     # TEST GET
     # ----------------------------------------------------------
     def test_get_product(self):
-        """It should read a Product"""
+        """It should get a Product from API"""
         test_product = ProductFactory()
         logging.debug("Test Product: %s", test_product.serialize())
         response = self.client.post(BASE_URL, json=test_product.serialize())
@@ -193,6 +193,45 @@ class TestProductRoutes(TestCase):
         response = self.client.get(f"{BASE_URL}/70000")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+     # ----------------------------------------------------------
+    # TEST UPDATE API
+    # ----------------------------------------------------------
+    def test_update_product(self):
+        """It should update a Product via API"""
+        # Create a test product 
+        test_product = ProductFactory()
+        logging.debug("Test Product: %s", test_product.serialize())
+        response = self.client.post(BASE_URL, json=test_product.serialize())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Make sure location header is set
+        location = response.headers.get("Location", None)
+        self.assertIsNotNone(location)
+
+        # Check the data is correct
+        new_product = response.get_json()
+        self.assertEqual(new_product["name"], test_product.name)
+        self.assertEqual(new_product["description"], test_product.description)
+        self.assertEqual(Decimal(new_product["price"]), test_product.price)
+        self.assertEqual(new_product["available"], test_product.available)
+        self.assertEqual(new_product["category"], test_product.category.name)
+
+        # update description
+        test_product.description = "new description"
+        response = self.client.put(f"{BASE_URL}/{new_product['id']}", json=test_product.serialize())
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        new_product = response.get_json()
+        self.assertEqual(new_product["name"], test_product.name)
+        self.assertEqual(new_product["description"], "new description")
+        self.assertEqual(Decimal(new_product["price"]), test_product.price)
+        self.assertEqual(new_product["available"], test_product.available)
+        self.assertEqual(new_product["category"], test_product.category.name)
+
+        # check 404 for bad id
+        response = self.client.put(f"{BASE_URL}/70000",json=test_product.serialize())
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
     ######################################################################
     # Utility functions
     ######################################################################
@@ -202,5 +241,5 @@ class TestProductRoutes(TestCase):
         response = self.client.get(BASE_URL)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
-        # logging.debug("data = %s", data)
+        logging.debug("data = %s", data)
         return len(data)
